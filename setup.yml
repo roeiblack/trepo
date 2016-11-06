@@ -1,0 +1,41 @@
+- hosts: localhost
+  tasks:
+  - name: install git
+    yum: name=git state=latest
+    become: yes
+    become_method: sudo
+  - name: clone Petclinic Repo
+    git: repo=https://github.com/roeiblack/spring-petclinic.git dest=~/petclinic 
+  - name: clone trepo Repo
+    git: repo=https://github.com/roeiblack/trepo.git dest=~/trepo update=no
+  - name: instal docker
+    yum: name=docker state=latest
+    become: yes
+    become_method: sudo
+  - name: add docker group to ec2-user
+    user: name=ec2-user groups=docker append=yes
+    become: yes
+    become_method: sudo
+  - name: start docker daemon
+    service: name=docker state=started
+    become: yes
+    become_method: sudo
+  - name: install maven
+    unarchive: copy=no creates=~/apache-maven-3.3.9 dest=~ src=http://apache.spd.co.il/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+  - name: Ensure Jenkins Yum repo present
+    become: yes
+    become_method: sudo
+    get_url: url=http://pkg.jenkins-ci.org/redhat/jenkins.repo
+           dest=/etc/yum.repos.d/jenkins.repo mode=0644
+  - name: Ensure Jenkins GPG key installed
+    command: rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+    become: yes
+    become_method: sudo
+  - name: Ensure Jenkins installed
+    yum: name=jenkins state=present
+    become: yes
+    become_method: sudo
+  - name: Ensure Jenkins is running
+    service: name=jenkins state=running enabled=true
+    become: yes
+    become_method: sudo
